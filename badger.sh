@@ -50,6 +50,11 @@ case $COMMAND in
 	"check_puppet")
 		/srv/monitoring/commands/check_puppet_agent 2> /dev/null
 		;;
+	"check_git_repos")
+		/srv/monitoring/commands/check_git_repos --diverged-criticial --ahead-criticial /srv/backup/.git/ /srv/monitoring/.git/ /etc/puppet/.git/
+		;;
+
+
 
 #-------------------
 #fallback
