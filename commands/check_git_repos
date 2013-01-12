@@ -1,0 +1,205 @@
+#!/bin/bash
+
+# checks a git repo(s) to see if they are up to date
+#
+# Example outputs multiple repos 
+#OK: all git repos up to date
+#WARNING: 1/3 git repos out of date
+#CRITICIAL: 1/3 git repos have diverged
+# example outputs single repo
+# WARNING: $repo behind origin/master by $behind commits
+
+#----------
+#idefault parameters 
+#----------
+
+WARNING=1
+CRITICIAL=3
+
+diverged_criticial=0
+ahead_criticial=0
+
+
+#-------------------------------------
+# function to check a single repo
+# usage: check_repo [path to .git folder] [branch to follow (defaults to origin/master)]
+# returns descriptive string
+# exits 0 for up to date
+# exits 1 for behind
+# exits 4 for ahead
+# exits 2 for diverged
+
+# exits 3 for unknown/error
+#-------------------------------------
+
+
+function check_repo {
+
+if [ "$2" = "" ]; then
+	branch="origin/master"
+else
+	branch=$2
+fi
+
+origin_master=`git --git-dir=$1 show-ref | grep $branch | sed 's/ .*//'`
+HEAD=`git --git-dir=$1 rev-list --max-count=1 HEAD`
+
+exitcode=3
+
+if [ "$HEAD" != "$origin_master" ]; then
+#	echo "$1 ($origin_master)"
+#	echo "$1 ($HEAD) isnt at $branch"
+
+if git --git-dir=$1 rev-list $branch | grep -q "$HEAD"; then
+# if repo is behind origin/master
+	BEHIND=`git --git-dir=$1 rev-list $branch | sed "/$HEAD/q" | wc -l`
+	let BEHIND=BEHIND-1
+	echo "$1 behind $branch by $BEHIND commits"
+	exitcode=1
+elif git --git-dir=$1 rev-list HEAD | grep -q "$origin_master"; then
+# if repo is ahead of origin/master
+	AHEAD=`git --git-dir=$1 rev-list HEAD | sed "/$origin_master/q" | wc -l`
+	let AHEAD=AHEAD-1
+	echo "$1 ahead of $branch by $AHEAD commits"
+	exitcode=4
+else
+# if repo has diverged from origin/master
+	echo "$1 has diverged from $branch"
+	exitcode=2
+fi
+
+
+else
+#	echo "$1 ($HEAD) at origin/master"
+	echo "$1 at $branch"
+	exitcode=0
+fi
+
+return $exitcode
+}
+
+function print_help {
+
+echo "
+$0 [repo:branch]
+	-w	Amount of git repos to be at the wrong version before issuing a warning, default 1
+	-c	Amount of git repos to be at the wrong version before issuiing a criticial, default 3
+
+	--diverged-criticial	issue a criticial on a diverged repo
+	--ahead-criticial	issue a criticial if ahead of branch
+
+Arguments:
+	repo:branch	a list of git repos to check, use a use a colon for a custom branch (if no branch specified will default to origin/master)
+
+Example
+	$0 -w 1 -c 3 /srv/backup/.git/:origin/master
+	$0 /srv/backup/.git/
+
+"
+
+}
+
+
+#------------------------
+# main function
+#------------------------
+
+#process paramaters
+
+while :
+do
+	case "$1" in
+	-h | --help)
+		print_help
+		exit 0
+		;;
+	-w)
+		WARNING=$2
+		shift 2
+		;;
+	-c)
+		CRITICIAL=$2
+		shift 2
+		;;
+	--diverged-criticial)
+		diverged_criticial=1
+		shift
+		;;
+	--ahead-criticial)
+		ahead_criticial=1
+		shift
+		;;
+	-*)
+		echo "Error: Unknown option: $1" >&2
+		exit 3
+		;;
+	*)
+		break
+		;;
+	esac
+
+done
+
+
+
+
+longoutput=""
+
+reposok=0
+reposbehind=0
+reposahead=0
+reposdiverged=0
+
+for repo_branch in "$@"
+do
+
+repo=`echo $repo_branch | sed 's/:/ /'`
+
+longoutput="${longoutput}`check_repo $repo` \n"
+case $? in
+	0)
+		let reposok=reposok+1
+		;;
+	1)
+		let reposbehind=reposbehind+1
+		;;
+	2)
+		let reposdiverged=reposdiverged+1
+		;;
+	4)
+		let reposahead=reposahead+1
+		;;
+	*)
+		echo "Error: Unable to process $repo"
+		exit 3
+		;;
+esac
+
+done
+
+#echo $reposok $reposbehind $reposahead $reposdiverged
+
+totalrepos=$[reposok+reposbehind+reposahead+reposdiverged]
+badrepos=$[reposbehind+reposahead+reposdiverged]
+
+if [ $reposdiverged -ge 1 -a $diverged_criticial == "1" ]; then
+	output="CRITICIAL: ${reposdiverged}/${totalrepos} have diverged"
+	returncode=2
+elif [ $reposahead -ge 1 -a "$ahead_criticial" == 1 ]; then
+	output="CRITICIAL: ${reposahead}/${totalrepos} are ahead of branch"
+	returncode=2
+elif [ $badrepos -ge $CRITICIAL ]; then
+	output="CRITICIAL: ${badrepos}/${totalrepos} at the wrong version"
+	returncode=2
+elif [ $badrepos -ge $WARNING ]; then
+	output="WARNING: ${badrepos}/${totalrepos} at the wrong version"
+	returncode=1
+else
+	output="OK: ${badrepos}/${totalrepos} at the wrong version"
+	returncode=0
+fi
+
+echo "$output"
+echo -e "$longoutput"
+exit $returncode
+
