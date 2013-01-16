@@ -48,7 +48,7 @@ case $COMMAND in
 		/usr/lib/nagios/plugins/check_ldap -H localhost -b "ou=users,o=sr" -3 -v
 		;;
 	"check_puppet")
-		/srv/monitoring/commands/check_puppet_agent 2> /dev/null
+		sudo /srv/monitoring/commands/check_puppet_agent -w 90000 -c 90000 2> /dev/null
 		;;
 	"check_git_repos")
 		/srv/monitoring/commands/check_git_repos --diverged-criticial --ahead-criticial /srv/backup/.git/ /srv/monitoring/.git/ /etc/puppet/.git/
