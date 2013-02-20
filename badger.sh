@@ -11,7 +11,7 @@ case $COMMAND in
 #generic checks
 #-------------------
 	"check_users")
-		/usr/lib/nagios/plugins/check_users -w 2 -c 3
+		/usr/lib/nagios/plugins/check_users -w 20 -c 30
 		;;
 	"check_load")
 		/usr/lib/nagios/plugins/check_load --warning='5.0,4.0,3.0' --critical='10.0,6.0,4.0'
