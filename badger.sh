@@ -11,41 +11,41 @@ case $COMMAND in
 #generic checks
 #-------------------
 	"check_users")
-		/usr/lib/nagios/plugins/check_users -w 20 -c 30
+		/usr/lib64/nagios/plugins/check_users -w 20 -c 30
 		;;
 	"check_load")
-		/usr/lib/nagios/plugins/check_load --warning='5.0,4.0,3.0' --critical='10.0,6.0,4.0'
+		/usr/lib64/nagios/plugins/check_load --warning='5.0,4.0,3.0' --critical='10.0,6.0,4.0'
 		;;
 	"check_disk")
-		/usr/lib/nagios/plugins/check_disk -w '20%' -c '10%' -e
+		/usr/lib64/nagios/plugins/check_disk -w '20%' -c '10%' -e
 		;;
 	"check_procs")
-		/usr/lib/nagios/plugins/check_procs -w '250' -c '400'
+		/usr/lib64/nagios/plugins/check_procs -w '250' -c '400'
 		;;
 	"check_procs_z")
-		/usr/lib/nagios/plugins/check_procs -w '1' -c '1' -s Z
+		/usr/lib64/nagios/plugins/check_procs -w '1' -c '1' -s Z
 		;;
 	"check_uptime")
 		/srv/monitoring/commands/check_uptime -w 120
 		;;
 	"check_swap")
-		/usr/lib/nagios/plugins/check_swap -w 95% -c 90%
+		/usr/lib64/nagios/plugins/check_swap -w 95% -c 90%
 		;;
 	"check_mem")
 		/srv/monitoring/commands/check_mem 100 50
 		;;
 	"check_packages")
-		/usr/lib/nagios/plugins/check_updates
+		/usr/lib64/nagios/plugins/check_updates
 		;;
 
 #-------------------
 #other checks
 #-------------------
 	"check_mysql")
-		/usr/lib/nagios/plugins/check_mysql
+		/usr/lib64/nagios/plugins/check_mysql
 		;;
 	"check_ldap")
-		/usr/lib/nagios/plugins/check_ldap -H localhost -b "ou=users,o=sr" -3 -v
+		/usr/lib64/nagios/plugins/check_ldap -H localhost -b "ou=users,o=sr" -3 -v
 		;;
 	"check_puppet")
 		sudo /srv/monitoring/commands/check_puppet_agent -w 90000 -c 90000 2> /dev/null
