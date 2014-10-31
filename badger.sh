@@ -29,7 +29,7 @@ case $COMMAND in
 		/srv/monitoring/commands/check_uptime -w 120
 		;;
 	"check_swap")
-		/usr/lib64/nagios/plugins/check_swap -w 95% -c 90%
+		/usr/lib64/nagios/plugins/check_swap -w 75% -c 50%
 		;;
 	"check_mem")
 		/srv/monitoring/commands/check_mem 100 50
